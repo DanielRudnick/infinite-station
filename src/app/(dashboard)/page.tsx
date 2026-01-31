@@ -13,7 +13,7 @@ export default function DashboardPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-heading font-bold tracking-tight">Dashboard Geral</h1>
-                    <p className="text-muted-foreground">Bem-vindo de volta, Carlos. Aqui está o resumo das suas lojas.</p>
+                    <p className="text-muted-foreground">Configuração inicial: Conecte sua primeira integração para ver dados reais.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -36,26 +36,26 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KPICard
                     title="Visitas Totais"
-                    value={124500}
-                    delta={12.5}
+                    value={0}
+                    delta={0}
                     type="number"
                 />
                 <KPICard
                     title="Vendas"
-                    value={3420}
-                    delta={8.2}
+                    value={0}
+                    delta={0}
                     type="number"
                 />
                 <KPICard
                     title="Receita Total"
-                    value={158400}
-                    delta={-2.4}
+                    value={0}
+                    delta={0}
                     type="currency"
                 />
                 <KPICard
                     title="Taxa de Conversão"
-                    value={2.75}
-                    delta={0.8}
+                    value={0}
+                    delta={0}
                     type="percentage"
                 />
             </div>

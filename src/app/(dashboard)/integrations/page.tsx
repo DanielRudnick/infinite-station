@@ -26,29 +26,19 @@ const connectors = [
         id: "meli-1",
         name: "Mercado Livre",
         type: "Marketplace",
-        status: "connected",
-        lastSync: "Há 12 minutos",
-        account: "Mega Store Oficial",
+        status: "disconnected",
+        lastSync: "Aguardando primeira conexão",
+        account: "Não conectado",
         logo: "https://http2.mlstatic.com/frontend-assets/ui-navigation/5.21.3/mercadolibre/logo__large_plus.png",
-        details: {
-            activeAds: 124,
-            pendingQuestions: 3,
-            authStatus: "TOKEN_VÁLIDO"
-        }
     },
     {
         id: "tiny-1",
         name: "Tiny ERP",
         type: "ERP",
-        status: "connected",
-        lastSync: "Há 45 minutos",
-        account: "Integrador Principal",
+        status: "disconnected",
+        lastSync: "Aguardando primeira conexão",
+        account: "Não conectado",
         logo: "https://www.tiny.com.br/wp-content/themes/tiny/img/logo-tiny.svg",
-        details: {
-            syncedOrders: 1250,
-            stockRules: 4,
-            authStatus: "API_KEY_OK"
-        }
     },
     {
         id: "bling-1",
@@ -105,29 +95,29 @@ export default function IntegrationsPage() {
             {/* Stats row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="glass p-5 rounded-2xl border border-border/40 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary">
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
                         <CheckCircle2 className="w-6 h-6" />
                     </div>
                     <div>
-                        <p className="text-2xl font-bold">02</p>
+                        <p className="text-2xl font-bold">00</p>
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Canais Ativos</p>
                     </div>
                 </div>
                 <div className="glass p-5 rounded-2xl border border-border/40 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-danger/10 flex items-center justify-center text-danger">
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
                         <AlertCircle className="w-6 h-6" />
                     </div>
                     <div>
-                        <p className="text-2xl font-bold">01</p>
+                        <p className="text-2xl font-bold">00</p>
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Falha na Sincronia</p>
                     </div>
                 </div>
                 <div className="glass p-5 rounded-2xl border border-border/40 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
                         <Clock className="w-6 h-6" />
                     </div>
                     <div>
-                        <p className="text-2xl font-bold">384</p>
+                        <p className="text-2xl font-bold">0</p>
                         <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Items Sincronizados/Hora</p>
                     </div>
                 </div>
@@ -169,10 +159,10 @@ export default function IntegrationsPage() {
                                         <RefreshCcw className={cn("w-4 h-4", syncingId === connector.id && "animate-spin")} />
                                         Sync: {connector.lastSync}
                                     </div>
-                                    {connector.details && (
+                                    {connector.status === 'connected' && (
                                         <div className="flex items-center gap-1.5 text-xs font-bold text-secondary uppercase tracking-tight">
                                             <ShieldCheck className="w-3.5 h-3.5" />
-                                            {connector.details.authStatus}
+                                            CONECTADO
                                         </div>
                                     )}
                                 </div>
