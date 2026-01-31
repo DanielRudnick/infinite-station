@@ -18,8 +18,10 @@ import {
     Globe,
     Truck
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { getMeliAuthUrl } from "@/lib/meli";
+import { useSearchParams } from "next/navigation";
 
 const connectors = [
     {
@@ -61,12 +63,24 @@ export default function IntegrationsPage() {
     const [connecting, setConnecting] = useState(false);
     const [configModal, setConfigModal] = useState<string | null>(null);
     const [syncingId, setSyncingId] = useState<string | null>(null);
+    const searchParams = useSearchParams();
+    const [authStatus, setAuthStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-    const handleConnect = () => {
-        setConnecting(true);
-        setTimeout(() => {
-            setConnecting(false);
-        }, 2000);
+    useEffect(() => {
+        const status = searchParams.get("status");
+        const message = searchParams.get("message");
+        const channel = searchParams.get("channel");
+
+        if (status === "success") {
+            setAuthStatus({ type: 'success', message: `${channel === 'meli' ? 'Mercado Livre' : 'Canal'} conectado com sucesso!` });
+        } else if (status === "error") {
+            setAuthStatus({ type: 'error', message: `Erro na conexão: ${message}` });
+        }
+    }, [searchParams]);
+
+    const handleConnectMeli = () => {
+        const url = getMeliAuthUrl();
+        window.location.href = url;
     };
 
     const handleSync = (id: string) => {
@@ -84,13 +98,30 @@ export default function IntegrationsPage() {
                 </div>
 
                 <button
-                    onClick={handleConnect}
+                    onClick={() => setConnecting(true)}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 font-bold"
                 >
                     <Plus className="w-5 h-5" />
                     Conectar Novo Canal
                 </button>
             </div>
+
+            {authStatus && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={cn(
+                        "p-4 rounded-2xl border flex items-center justify-between",
+                        authStatus.type === 'success' ? "bg-secondary/10 border-secondary/20 text-secondary" : "bg-danger/10 border-danger/20 text-danger"
+                    )}
+                >
+                    <div className="flex items-center gap-3">
+                        {authStatus.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                        <span className="font-bold text-sm">{authStatus.message}</span>
+                    </div>
+                    <button onClick={() => setAuthStatus(null)} className="text-xs font-bold hover:underline">Fechar</button>
+                </motion.div>
+            )}
 
             {/* Stats row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -188,8 +219,11 @@ export default function IntegrationsPage() {
                                         </button>
                                     </>
                                 ) : (
-                                    <button className="px-6 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
-                                        Reconectar
+                                    <button
+                                        onClick={connector.id === 'meli-1' ? handleConnectMeli : () => { }}
+                                        className="px-6 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
+                                    >
+                                        Conectar
                                     </button>
                                 )}
                             </div>
@@ -363,7 +397,7 @@ export default function IntegrationsPage() {
                             <div className="flex flex-col gap-3">
                                 <button
                                     className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2"
-                                    onClick={() => setConnecting(false)}
+                                    onClick={handleConnectMeli}
                                 >
                                     Ir para Mercado Livre <ExternalLink className="w-5 h-5" />
                                 </button>
