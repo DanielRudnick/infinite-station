@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeMeliCodeForToken } from "@/lib/meli";
+import { saveIntegration } from "@/lib/integration-service";
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -18,9 +19,15 @@ export async function GET(req: NextRequest) {
     try {
         const tokenData = await exchangeMeliCodeForToken(code);
 
-        // In a real application, you would save tokenData to your database here.
-        // tokenData contains: access_token, refresh_token, expires_in, etc.
-        console.log("Meli Token Data:", tokenData);
+        // Save integration to database
+        await saveIntegration({
+            type: "MERCADO_LIVRE",
+            accessToken: tokenData.access_token,
+            refreshToken: tokenData.refresh_token,
+            expiresIn: tokenData.expires_in,
+        });
+
+        console.log("Meli Token Saved Successfully");
 
         // Redirect back to integrations page with success
         return NextResponse.redirect(new URL("/integrations?status=success&channel=meli", req.url));

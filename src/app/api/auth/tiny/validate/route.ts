@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateTinyToken } from "@/lib/tiny";
+import { saveIntegration } from "@/lib/integration-service";
 
 export async function POST(req: NextRequest) {
     try {
@@ -11,8 +12,13 @@ export async function POST(req: NextRequest) {
 
         const data = await validateTinyToken(token);
 
-        // In a real application, you would save this token securely here.
-        console.log("Tiny Token Validated Successfully:", data);
+        // Save integration to database
+        await saveIntegration({
+            type: "TINY",
+            accessToken: token, // Tiny V3 token doesn't usually expire like OAuth
+        });
+
+        console.log("Tiny Token Saved Successfully");
 
         return NextResponse.json({
             success: true,
