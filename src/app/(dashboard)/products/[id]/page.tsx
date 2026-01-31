@@ -38,15 +38,7 @@ import { useRouter } from "next/navigation";
 import { cn, formatCurrency, formatNumber } from "@/lib/utils";
 import { useState } from "react";
 
-const data = [
-    { name: "Seg", visitas: 400, vendas: 24, conv: 6.0 },
-    { name: "Ter", visitas: 300, vendas: 18, conv: 6.0 },
-    { name: "Qua", visitas: 500, vendas: 45, conv: 9.0 },
-    { name: "Qui", visitas: 450, vendas: 36, conv: 8.0 },
-    { name: "Sex", visitas: 600, vendas: 54, conv: 9.0 },
-    { name: "Sab", visitas: 800, vendas: 88, conv: 11.0 },
-    { name: "Dom", visitas: 750, vendas: 75, conv: 10.0 },
-];
+const data: any[] = [];
 
 export default function ProductDrilldownPage() {
     const router = useRouter();

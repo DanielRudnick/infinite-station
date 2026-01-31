@@ -24,50 +24,7 @@ import {
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 
-const alertsData = [
-    {
-        id: "alt-1",
-        severity: "danger",
-        title: "Queda na Taxa de Conversão",
-        description: "A taxa de conversão do produto 'Smartphone S23' caiu 45% nas últimas 24h.",
-        product: "Smartphone S23 Ultra",
-        time: "Há 12 minutos",
-        status: "unack",
-        type: "real-time"
-    },
-    {
-        id: "alt-ml-1",
-        severity: "warning",
-        title: "Risco de Ruptura de Estoque",
-        description: "IA detectou que o estoque atual esgotará em 72h conforme tendência de vendas.",
-        product: "Sony WH-1000XM5",
-        time: "Há 45 minutos",
-        status: "unack",
-        type: "predictive",
-        confidence: 94
-    },
-    {
-        id: "alt-2",
-        severity: "warning",
-        title: "Estoque em Nível Crítico",
-        description: "Restam apenas 3 unidades no estoque do Mercado Livre.",
-        product: "Sony WH-1000XM5",
-        time: "Há 2 horas",
-        status: "unack",
-        type: "real-time"
-    },
-    {
-        id: "alt-ml-2",
-        severity: "info",
-        title: "Oportunidade de Buy Box",
-        description: "Ajuste de preço de R$ 399 para R$ 389 garante 100% de dominância amanhã.",
-        product: "Apple Pencil 2nd Gen",
-        time: "Há 3 horas",
-        status: "unack",
-        type: "predictive",
-        confidence: 88
-    }
-];
+const alertsData: any[] = [];
 
 export default function AlertsPage() {
     const [alerts, setAlerts] = useState(alertsData);
