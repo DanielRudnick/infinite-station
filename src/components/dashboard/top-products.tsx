@@ -1,53 +1,62 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MoreVertical, ExternalLink, TrendingUp, TrendingDown } from "lucide-react";
+import { MoreVertical, ExternalLink, TrendingUp, TrendingDown, PackageSearch } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
-
-const products = [
-    {
-        id: "MLB123",
-        name: "Smartphone Galaxy S23 Ultra 5G 256GB",
-        sales: 145,
-        revenue: 854000,
-        conversion: 5.2,
-        stock: 24,
-        trend: "up",
-        image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=100&h=100&fit=crop"
-    },
-    {
-        id: "MLB456",
-        name: "Fone de Ouvido Sony WH-1000XM5",
-        sales: 89,
-        revenue: 213000,
-        conversion: 4.8,
-        stock: 12,
-        trend: "up",
-        image: "https://images.unsplash.com/photo-1546435770-a3e42650d9b?w=100&h=100&fit=crop"
-    },
-    {
-        id: "MLB789",
-        name: "Câmera Mirrorless Canon EOS R6",
-        sales: 34,
-        revenue: 450000,
-        conversion: 2.1,
-        stock: 5,
-        trend: "down",
-        image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=100&h=100&fit=crop"
-    },
-    {
-        id: "MLB012",
-        name: "Apple Watch Series 9 GPS + Cellular",
-        sales: 67,
-        revenue: 167000,
-        conversion: 3.5,
-        stock: 18,
-        trend: "up",
-        image: "https://images.unsplash.com/photo-1434493907317-a46b53b81846?w=100&h=100&fit=crop"
-    }
-];
+import { useEffect, useState } from "react";
 
 export function TopProducts() {
+    const [products, setProducts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchProducts = async () => {
+        try {
+            const res = await fetch("/api/products");
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setProducts(data);
+            }
+        } catch (error) {
+            console.error("Failed to load products", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProducts();
+
+        // Listen for sync events
+        window.addEventListener("product-sync-complete", fetchProducts);
+        return () => window.removeEventListener("product-sync-complete", fetchProducts);
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="glass rounded-2xl border border-border/40 p-12 flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (products.length === 0) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass rounded-2xl border border-border/40 shadow-sm p-12 text-center"
+            >
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                    <PackageSearch className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-heading font-bold text-lg mb-2">Nenhum produto encontrado</h3>
+                <p className="text-muted-foreground max-w-xs mx-auto">
+                    Conecte suas contas do Mercado Livre ou ERP e clique em "Sincronizar" para importar seus anúncios.
+                </p>
+            </motion.div>
+        );
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -99,7 +108,7 @@ export function TopProducts() {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <span className="text-sm font-medium">{formatCurrency(product.revenue)}</span>
+                                    <span className="text-sm font-medium">{product.price ? formatCurrency(product.price) : '-'}</span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <span className="text-sm font-medium">{product.conversion}%</span>

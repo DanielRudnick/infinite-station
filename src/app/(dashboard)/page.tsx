@@ -6,7 +6,34 @@ import { TopProducts } from "@/components/dashboard/top-products";
 import { motion } from "framer-motion";
 import { Download, Filter, RefreshCcw } from "lucide-react";
 
+import { useState } from "react";
+import { toast } from "sonner";
+
 export default function DashboardPage() {
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleSync = async () => {
+        setIsSyncing(true);
+        toast.info("Iniciando sincronização...");
+
+        try {
+            const res = await fetch("/api/sync/products", { method: "POST" });
+            const data = await res.json();
+
+            if (data.success) {
+                toast.success(`Sincronização concluída! ${data.count} produtos atualizados.`);
+                // Dispatch event to refresh lists
+                window.dispatchEvent(new Event("product-sync-complete"));
+            } else {
+                toast.error("Erro na sincronização: " + data.error);
+            }
+        } catch (error) {
+            toast.error("Falha ao comunicar com o servidor");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     return (
         <div className="space-y-8">
             {/* Header section */}
@@ -25,9 +52,13 @@ export default function DashboardPage() {
                         <Download className="w-4 h-4" />
                         Exportar
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 text-sm font-bold">
-                        <RefreshCcw className="w-4 h-4" />
-                        Sincronizar
+                    <button
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <RefreshCcw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
+                        {isSyncing ? "Sincronizando..." : "Sincronizar"}
                     </button>
                 </div>
             </div>
