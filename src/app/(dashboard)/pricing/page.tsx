@@ -20,11 +20,7 @@ import {
 import { useState } from "react";
 import { cn, formatCurrency } from "@/lib/utils";
 
-const pricingRules = [
-    { id: 1, name: "Ganhar Buy Box (Agressivo)", trigger: "Concorrente Altera Preço", action: "Preço - R$ 0,10", minMargin: "15%", status: "Active" },
-    { id: 2, name: "Queima de Estoque (Auto)", trigger: "Estoque > 100 un. & 0 vendas/3d", action: "Preço - 5%", minMargin: "5%", status: "Active" },
-    { id: 3, name: "Maximização de Lucro", trigger: "Estoque < 10 un. & Buy Box Dominada", action: "Preço + 2%", minMargin: "25%", status: "Inactive" },
-];
+const pricingRules: any[] = [];
 
 export default function PricingEnginePage() {
     const [activeRule, setActiveRule] = useState<number | null>(null);

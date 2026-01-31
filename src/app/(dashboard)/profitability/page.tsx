@@ -30,20 +30,8 @@ import {
 import { cn, formatCurrency } from "@/lib/utils";
 import { useState } from "react";
 
-const profitabilityData = [
-    { sku: "MLB-S23-ULTRA", name: "Galaxy S23 Ultra", revenue: 589000, netProfit: 124000, margin: 21, ads_cost: 45000, fee: 94240, taxes: 58900 },
-    { sku: "SONY-XM5-BLK", name: "Sony WH-1000XM5", revenue: 245000, netProfit: 68000, margin: 27.7, ads_cost: 12000, fee: 39200, taxes: 24500 },
-    { sku: "APPLE-W9-45", name: "Apple Watch S9", revenue: 312000, netProfit: 42000, margin: 13.4, ads_cost: 28000, fee: 49920, taxes: 31200 },
-    { sku: "LG-MON-27G", name: "Monitor LG 27'", revenue: 185000, netProfit: -12000, margin: -6.4, ads_cost: 32000, fee: 29600, taxes: 18500 },
-];
-
-const breakageData = [
-    { name: 'Custo Produto', value: 45, color: '#6366f1' },
-    { name: 'Taxas ML', value: 16, color: '#10b981' },
-    { name: 'Impostos', value: 10, color: '#f59e0b' },
-    { name: 'Marketing/Ads', value: 8, color: '#ec4899' },
-    { name: 'Margem Líquida', value: 21, color: '#0ea5e9' },
-];
+const profitabilityData: any[] = [];
+const breakageData: any[] = [];
 
 export default function ProfitabilityPage() {
     const [searchTerm, setSearchTerm] = useState("");
