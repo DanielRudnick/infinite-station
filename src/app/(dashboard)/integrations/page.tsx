@@ -65,6 +65,9 @@ export default function IntegrationsPage() {
     const [syncingId, setSyncingId] = useState<string | null>(null);
     const searchParams = useSearchParams();
     const [authStatus, setAuthStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [tinyModalOpen, setTinyModalOpen] = useState(false);
+    const [tinyToken, setTinyToken] = useState("");
+    const [isValidatingTiny, setIsValidatingTiny] = useState(false);
 
     useEffect(() => {
         const status = searchParams.get("status");
@@ -86,6 +89,28 @@ export default function IntegrationsPage() {
     const handleSync = (id: string) => {
         setSyncingId(id);
         setTimeout(() => setSyncingId(null), 1500);
+    };
+
+    const handleValidateTinyToken = async () => {
+        setIsValidatingTiny(true);
+        try {
+            const response = await fetch("/api/auth/tiny/validate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: tinyToken }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                setAuthStatus({ type: 'success', message: `Tiny ERP (${data.accountName}) conectado com sucesso!` });
+                setTinyModalOpen(false);
+            } else {
+                setAuthStatus({ type: 'error', message: data.error || "Token inválido" });
+            }
+        } catch (e) {
+            setAuthStatus({ type: 'error', message: "Erro ao validar token" });
+        } finally {
+            setIsValidatingTiny(false);
+        }
     };
 
     return (
@@ -220,7 +245,11 @@ export default function IntegrationsPage() {
                                     </>
                                 ) : (
                                     <button
-                                        onClick={connector.id === 'meli-1' ? handleConnectMeli : () => { }}
+                                        onClick={
+                                            connector.id === 'meli-1' ? handleConnectMeli :
+                                                connector.id === 'tiny-1' ? () => setTinyModalOpen(true) :
+                                                    () => { }
+                                        }
                                         className="px-6 py-2 rounded-xl bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
                                     >
                                         Conectar
@@ -412,6 +441,73 @@ export default function IntegrationsPage() {
                     </motion.div>
                 </div>
             )}
+            {/* Tiny ERP Token Modal */}
+            <AnimatePresence>
+                {tinyModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setTinyModalOpen(false)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="glass w-full max-w-md p-8 rounded-3xl z-10 border border-white/10 shadow-2xl relative"
+                        >
+                            <div className="text-center mb-8">
+                                <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-xl p-3 shadow-lg border border-border/40">
+                                    <img src="https://www.tiny.com.br/wp-content/themes/tiny/img/logo-tiny.svg" alt="Tiny" className="w-full h-full object-contain" />
+                                </div>
+                                <h3 className="text-2xl font-heading font-bold">Conectar Tiny ERP</h3>
+                                <p className="text-muted-foreground text-sm">Insira seu Token da API V3 para sincronizar produtos e pedidos.</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest ml-1">Token de API (V3)</label>
+                                    <div className="relative">
+                                        <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                        <input
+                                            type="password"
+                                            value={tinyToken}
+                                            onChange={(e) => setTinyToken(e.target.value)}
+                                            placeholder="Cole seu token aqui..."
+                                            className="w-full bg-muted/30 border border-border/40 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-mono"
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground mt-2 px-1">
+                                        O token pode ser encontrado em: <strong>Configurações &gt; Web Services &gt; Chaves de API</strong> no seu painel Tiny.
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-col gap-3 pt-4">
+                                    <button
+                                        disabled={!tinyToken || isValidatingTiny}
+                                        onClick={handleValidateTinyToken}
+                                        className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {isValidatingTiny ? (
+                                            <RefreshCcw className="w-5 h-5 animate-spin" />
+                                        ) : (
+                                            "Validar e Conectar"
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={() => setTinyModalOpen(false)}
+                                        className="w-full py-3 text-muted-foreground hover:text-foreground text-sm font-medium"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
