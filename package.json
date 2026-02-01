@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "@prisma/client": "6.2.1",
-    "@types/bcrypt": "^6.0.0",
+    "@types/bcrypt": "^5.0.2",
     "@types/pg": "^8.11.11",
     "@vercel/toolbar": "^0.2.1",
-    "bcrypt": "^6.0.0",
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "cross-env": "^7.0.3",
