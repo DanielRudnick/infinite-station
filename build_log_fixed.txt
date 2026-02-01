@@ -1,0 +1,95 @@
+
+> infinite-station@0.1.0 build
+> next build
+
+   ??? Next.js 15.1.6
+   - Environments: .env
+
+   Creating an optimized production build ...
+node.exe : Failed to 
+compile.
+No linha:1 caractere:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (Fai  
+  led to compile.:String   
+ ) [], RemoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+
+./node_modules/lucide-react
+/dist/esm/lucide-react.js
+Module not found: Can't 
+resolve './icons/funnel.js'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./src/app/(dashboard)/alert
+s/page.tsx
+
+./node_modules/lucide-react
+/dist/esm/lucide-react.js
+Module not found: Can't 
+resolve './icons/funnel.js'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./src/app/(dashboard)/setti
+ngs/audit/page.tsx
+
+./node_modules/lucide-react
+/dist/esm/lucide-react.js
+Module not found: Can't 
+resolve './icons/fingerprin
+t-pattern.js'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./src/app/(dashboard)/setti
+ngs/page.tsx
+
+./node_modules/lucide-react
+/dist/esm/lucide-react.js
+Module not found: Can't 
+resolve './icons/funnel.js'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./src/app/(dashboard)/produ
+cts/page.tsx
+
+./node_modules/lucide-react
+/dist/esm/lucide-react.js
+Module not found: Can't 
+resolve './icons/funnel.js'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./src/app/(dashboard)/page.
+tsx
+
+
+> Build failed because of 
+webpack errors

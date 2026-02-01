@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { validateTinyToken } from "@/lib/tiny";
 import { saveIntegration } from "@/lib/integration-service";
 import { getCurrentTenantId } from "@/lib/data-access";

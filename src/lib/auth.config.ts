@@ -17,14 +17,14 @@ export const authConfig = {
             }
             return true;
         },
-        async jwt({ token, user }) {
+        async jwt({ token, user }: any) {
             if (user) {
                 token.tenantId = user.tenantId;
                 token.role = user.role;
             }
             return token;
         },
-        async session({ session, token }) {
+        async session({ session, token }: any) {
             if (token.sub && session.user) {
                 session.user.id = token.sub;
                 session.user.tenantId = token.tenantId;

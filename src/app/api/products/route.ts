@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { getCurrentTenantId } from "@/lib/data-access";
 
@@ -7,7 +8,7 @@ export async function GET(req: NextRequest) {
         const tenantId = await getCurrentTenantId();
 
         // Check if there are any products
-        const productsCount = await prisma.product.count({
+        const productsCount = await (prisma.product as any).count({
             where: { tenantId }
         });
 
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Fetch top products by default (logic can be improved)
-        const products = await prisma.product.findMany({
+        const products = await (prisma.product as any).findMany({
             where: { tenantId },
             take: 10,
             orderBy: {

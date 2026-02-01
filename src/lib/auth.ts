@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
 import { prisma } from "./prisma";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 export const { auth, signIn, signOut, handlers } = NextAuth({
@@ -27,7 +27,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                     // If user has no password (e.g. from older seeding), we can't login via credentials
                     if (!user.password) return null;
 
-                    const passwordsMatch = await bcrypt.compare(password, user.password);
+                    const passwordsMatch = await (bcrypt as any).compare(password, user.password);
                     if (passwordsMatch) {
                         // Return user object, ensuring id is string
                         return {

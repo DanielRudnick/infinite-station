@@ -145,7 +145,7 @@ export async function syncMercadoLivreMetrics(tenantId: string) {
                     // Set to start of day to ensure consistency
                     date.setUTCHours(0, 0, 0, 0);
 
-                    await prisma.itemDailyMetrics.upsert({
+                    await (prisma as any).itemDailyMetrics.upsert({
                         where: {
                             productId_date: {
                                 productId: product.id,
@@ -191,7 +191,7 @@ export async function syncMercadoLivreMetrics(tenantId: string) {
                         const quantity = item.quantity;
                         const revenue = item.unit_price * quantity;
 
-                        await prisma.itemDailyMetrics.upsert({
+                        await (prisma as any).itemDailyMetrics.upsert({
                             where: {
                                 productId_date: {
                                     productId: product.id,

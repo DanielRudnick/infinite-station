@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { getCurrentTenantId } from "@/lib/data-access";
 import { syncMercadoLivreMetrics } from "@/lib/sync-engine";
 

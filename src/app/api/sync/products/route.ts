@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { syncMercadoLivreProducts } from "@/lib/sync-engine";
-import { getOrCreateDefaultTenant } from "@/lib/integration-service";
+import { getCurrentTenantId } from "@/lib/data-access";
 
 export async function POST(req: NextRequest) {
     try {
-        // In a real app, we would get tenantId from the user session
-        const tenantId = await getOrCreateDefaultTenant();
+        const tenantId = await getCurrentTenantId();
 
         const result = await syncMercadoLivreProducts(tenantId);
 
