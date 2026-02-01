@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getOrCreateDefaultTenant } from "@/lib/integration-service";
+import { getCurrentTenantId } from "@/lib/data-access";
 
 export async function GET(req: NextRequest) {
     try {
-        const tenantId = await getOrCreateDefaultTenant();
+        const tenantId = await getCurrentTenantId();
 
         // Check if there are any products
         const productsCount = await prisma.product.count({
@@ -23,25 +23,33 @@ export async function GET(req: NextRequest) {
                 updatedAt: 'desc'
             },
             include: {
-                metrics: {
-                    orderBy: { timestamp: 'desc' },
-                    take: 1
+                dailyMetrics: {
+                    orderBy: { date: 'desc' },
+                    take: 30
                 }
             }
         });
 
         // Map to UI format
-        const formatted = products.map((p: any) => ({
-            id: p.externalId,
-            name: p.title,
-            sales: 0, // We need to sync sales metric later
-            revenue: 0,
-            conversion: 0,
-            stock: 0, // Need to parse attribute or separate sync
-            trend: "flat",
-            image: p.imageUrl || "",
-            price: p.metrics?.[0]?.value || 0
-        }));
+        const formatted = products.map((p: any) => {
+            const last30Days = p.dailyMetrics || [];
+            const sales = last30Days.reduce((acc: number, m: any) => acc + m.orders, 0);
+            const revenue = last30Days.reduce((acc: number, m: any) => acc + m.revenue, 0);
+            const latestPrice = last30Days[0]?.price || 0;
+            const stock = last30Days[0]?.stock || 0;
+
+            return {
+                id: p.externalId,
+                name: p.title,
+                sales: sales,
+                revenue: revenue,
+                conversion: sales > 0 ? (sales / last30Days.reduce((acc: number, m: any) => acc + m.visits, 1)) * 100 : 0,
+                stock: stock,
+                trend: "flat", // Could calculate from previous period
+                image: p.imageUrl || "",
+                price: latestPrice
+            };
+        });
 
         return NextResponse.json(formatted);
     } catch (e: any) {

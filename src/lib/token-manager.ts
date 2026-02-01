@@ -6,9 +6,12 @@ import { exchangeMeliCodeForToken, MELI_API_URL } from "./meli";
  * Retrieves a decrypted access token for a specific integration.
  * Handles token refreshing if expired.
  */
-export async function getDecryptedAccessToken(integrationId: string): Promise<string> {
-    const integration = await prisma.integration.findUnique({
-        where: { id: integrationId },
+export async function getDecryptedAccessToken(tenantId: string, integrationId: string): Promise<string> {
+    const integration = await prisma.integration.findFirst({
+        where: {
+            id: integrationId,
+            tenantId: tenantId
+        },
     });
 
     if (!integration) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeMeliCodeForToken } from "@/lib/meli";
 import { saveIntegration } from "@/lib/integration-service";
+import { getCurrentTenantId } from "@/lib/data-access";
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -19,8 +20,11 @@ export async function GET(req: NextRequest) {
     try {
         const tokenData = await exchangeMeliCodeForToken(code);
 
+        const tenantId = await getCurrentTenantId();
+
         // Save integration to database
         await saveIntegration({
+            tenantId,
             type: "MERCADO_LIVRE",
             accessToken: tokenData.access_token,
             refreshToken: tokenData.refresh_token,

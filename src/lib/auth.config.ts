@@ -17,9 +17,18 @@ export const authConfig = {
             }
             return true;
         },
+        async jwt({ token, user }) {
+            if (user) {
+                token.tenantId = user.tenantId;
+                token.role = user.role;
+            }
+            return token;
+        },
         async session({ session, token }) {
             if (token.sub && session.user) {
                 session.user.id = token.sub;
+                session.user.tenantId = token.tenantId;
+                session.user.role = token.role;
             }
             return session;
         },

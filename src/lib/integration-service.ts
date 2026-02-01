@@ -4,30 +4,22 @@ import { encrypt } from "./crypto";
 /**
  * Ensures a default tenant exists and returns its ID.
  */
-export async function getOrCreateDefaultTenant() {
-    let tenant = await prisma.tenant.findFirst();
-    if (!tenant) {
-        tenant = await prisma.tenant.create({
-            data: {
-                name: "Loja Padrão",
-                slug: "loja-padrao",
-            }
-        });
-    }
-    return tenant.id;
-}
+/**
+ * Helper to ensure tenant exists -> Moved to relying on Auth Session
+ */
+// export async function getOrCreateDefaultTenant() { ... }
 
 /**
  * Saves or updates a marketplace/ERP integration in the database.
  */
 export async function saveIntegration(params: {
-    tenantId?: string;
+    tenantId: string;
     type: "MERCADO_LIVRE" | "TINY" | "BLING" | "OLIST";
     accessToken: string;
     refreshToken?: string;
     expiresIn?: number;
 }) {
-    const tenantId = params.tenantId || await getOrCreateDefaultTenant();
+    const { tenantId } = params;
     const encryptedAccessToken = encrypt(params.accessToken);
     const encryptedRefreshToken = params.refreshToken ? encrypt(params.refreshToken) : null;
 
@@ -37,7 +29,10 @@ export async function saveIntegration(params: {
 
     return await prisma.integration.upsert({
         where: {
-            id: await findIdByType(tenantId, params.type) || "new-id",
+            tenantId_type: {
+                tenantId: tenantId,
+                type: params.type,
+            },
         },
         create: {
             tenantId: tenantId,
@@ -58,9 +53,3 @@ export async function saveIntegration(params: {
     });
 }
 
-async function findIdByType(tenantId: string, type: string) {
-    const integration = await prisma.integration.findFirst({
-        where: { tenantId, type }
-    });
-    return integration?.id;
-}

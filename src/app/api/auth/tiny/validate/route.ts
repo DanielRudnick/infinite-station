@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateTinyToken } from "@/lib/tiny";
 import { saveIntegration } from "@/lib/integration-service";
+import { getCurrentTenantId } from "@/lib/data-access";
 
 export async function POST(req: NextRequest) {
     try {
@@ -12,8 +13,11 @@ export async function POST(req: NextRequest) {
 
         const data = await validateTinyToken(token);
 
+        const tenantId = await getCurrentTenantId();
+
         // Save integration to database
         await saveIntegration({
+            tenantId,
             type: "TINY",
             accessToken: token, // Tiny V3 token doesn't usually expire like OAuth
         });
