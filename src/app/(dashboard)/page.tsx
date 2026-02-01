@@ -3,6 +3,7 @@
 import { KPICard } from "@/components/dashboard/kpi-card";
 import { MainChart } from "@/components/dashboard/main-chart";
 import { TopProducts } from "@/components/dashboard/top-products";
+import { OnboardingWizard } from "@/components/dashboard/onboarding-wizard";
 import { motion } from "framer-motion";
 import { Download, Filter, RefreshCcw } from "lucide-react";
 
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 
 export default function DashboardPage() {
     const [isSyncing, setIsSyncing] = useState(false);
+    const [onboardingComplete, setOnboardingComplete] = useState(false);
 
     const handleSync = async () => {
         setIsSyncing(true);
@@ -62,6 +64,12 @@ export default function DashboardPage() {
                     </button>
                 </div>
             </div>
+
+            {!onboardingComplete && (
+                <div className="mb-12">
+                    <OnboardingWizard />
+                </div>
+            )}
 
             {/* KPI Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

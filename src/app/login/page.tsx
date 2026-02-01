@@ -39,9 +39,9 @@ export default function LoginPage() {
                 setLoading(false);
             } else {
                 toast.success("Login realizado com sucesso!");
-                // Check if user has multiple tenants - for now default to home
-                // In a real multi-tenant app, we would check user.tenants length
-                router.push("/");
+                // Transition to tenant selection wizard step
+                setStep("tenant");
+                setLoading(false);
             }
         } catch (error) {
             toast.error("Erro ao realizar login");
@@ -130,37 +130,52 @@ export default function LoginPage() {
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="space-y-4"
+                        className="space-y-6"
                     >
-                        <p className="text-slate-400 text-sm mb-6 text-center">Selecione o ambiente que deseja acessar:</p>
+                        <div className="text-center mb-8">
+                            <h2 className="text-2xl font-heading font-bold text-white mb-2">Bem-vindo de volta!</h2>
+                            <p className="text-slate-400 text-sm">Selecione o ambiente que deseja gerenciar agora:</p>
+                        </div>
 
-                        {[
-                            { id: "1", name: "Mega Store", items: "12 anúncios ativos" },
-                            { id: "2", name: "Tech Solutions", items: "8 anúncios ativos" },
-                            { id: "3", name: "Fashion Hub", items: "24 anúncios ativos" },
-                        ].map((tenant) => (
-                            <button
-                                key={tenant.id}
-                                onClick={() => handleSelectTenant(tenant.name)}
-                                className="w-full group glass p-5 rounded-2xl border border-white/5 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 text-left"
-                            >
-                                <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                    <Store className="w-6 h-6 text-primary" />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="font-bold text-white group-hover:text-primary transition-colors">{tenant.name}</p>
-                                    <p className="text-xs text-slate-500">{tenant.items}</p>
-                                </div>
-                                <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-primary transition-colors" />
-                            </button>
-                        ))}
+                        <div className="space-y-3">
+                            {[
+                                { id: "1", name: "Mega Store", items: "12 anúncios ativos", trend: "+12%" },
+                                { id: "2", name: "Tech Solutions", items: "8 anúncios ativos", trend: "+5%" },
+                                { id: "3", name: "Fashion Hub", items: "24 anúncios ativos", trend: "+18%" },
+                            ].map((tenant) => (
+                                <button
+                                    key={tenant.id}
+                                    onClick={() => handleSelectTenant(tenant.name)}
+                                    className="w-full group glass p-5 rounded-2xl border border-white/5 hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center gap-4 text-left relative overflow-hidden"
+                                >
+                                    <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                        <Store className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-bold text-white group-hover:text-primary transition-colors">{tenant.name}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">{tenant.items}</p>
+                                            <span className="text-[10px] text-secondary font-bold">{tenant.trend}</span>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-primary transition-all group-hover:translate-x-1" />
+
+                                    {/* Aesthetic gradient line */}
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform origin-top" />
+                                </button>
+                            ))}
+                        </div>
 
                         <button
                             onClick={() => setStep("login")}
-                            className="w-full py-4 text-slate-500 hover:text-white text-sm font-medium transition-colors"
+                            className="w-full py-4 text-slate-500 hover:text-white text-sm font-bold uppercase tracking-widest transition-colors"
                         >
                             Voltar ao login
                         </button>
+
+                        <div className="pt-4 border-t border-white/5 text-center">
+                            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Acesso seguro via Infinite-Auth</p>
+                        </div>
                     </motion.div>
                 )}
             </motion.div>
