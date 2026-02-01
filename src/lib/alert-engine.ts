@@ -14,39 +14,64 @@ export async function evaluateAlertRules(tenantId: string) {
     const results = [];
 
     for (const rule of rules) {
-        // Check cooldown
-        if (rule.lastTriggered) {
-            const cooldownMs = rule.cooldownMinutes * 60 * 1000;
-            if (now.getTime() - rule.lastTriggered.getTime() < cooldownMs) {
-                continue;
-            }
-        }
-
         try {
-            const isTriggered = await checkRule(rule, tenantId);
+            const { isTriggered, changePercent } = await checkRule(rule, tenantId);
 
             if (isTriggered) {
-                // Create Alert
-                await prisma.alert.create({
-                    data: {
-                        tenantId: rule.tenantId,
-                        productId: rule.productId,
-                        ruleId: rule.id,
-                        title: `Alerta: ${rule.metric.toUpperCase()} ${rule.condition}`,
-                        description: `A métrica ${rule.metric} apresentou um(a) ${rule.condition} superior a ${rule.threshold}% nos últimos ${rule.windowDays} dias.`,
-                        severity: rule.condition === "drop" ? "DANGER" : "WARNING",
-                        ruleType: "AUTOMATIC",
-                    } as any
-                });
+                // Determine Severity based on threshold multiples
+                // 1x threshold = WARNING, 2.5x threshold = DANGER
+                const absChange = Math.abs(changePercent);
+                let severity: "DANGER" | "WARNING" | "INFO" = "WARNING";
 
-                // Update lastTriggered
-                await (prisma as any).alertRule.update({
-                    where: { id: rule.id },
-                    data: { lastTriggered: now }
-                });
+                if (absChange >= rule.threshold * 2.5) {
+                    severity = "DANGER";
+                } else if (absChange >= rule.threshold) {
+                    severity = "WARNING";
+                }
 
-                results.push({ ruleId: rule.id, status: "triggered" });
+                // ANTI-SPAM: Cooldown and Escalation Logic
+                const cooldownMs = rule.cooldownMinutes * 60 * 1000;
+                const isWithinCooldown = rule.lastTriggered && (now.getTime() - rule.lastTriggered.getTime() < cooldownMs);
+
+                // If within cooldown, only trigger if severity ESCALATED (e.g., from WARNING to DANGER)
+                const isEscalation = severity === "DANGER" && rule.lastSeverity === "WARNING";
+                const shouldTrigger = !isWithinCooldown || isEscalation;
+
+                if (shouldTrigger) {
+                    // Create Alert
+                    await prisma.alert.create({
+                        data: {
+                            tenantId: rule.tenantId,
+                            productId: rule.productId,
+                            ruleId: rule.id,
+                            title: `Alerta ${severity}: ${rule.metric.toUpperCase()} ${rule.condition}`,
+                            description: `A métrica ${rule.metric} apresentou um(a) ${rule.condition} de ${Math.round(absChange)}% (Limite: ${rule.threshold}%).`,
+                            severity,
+                            ruleType: "AUTOMATIC",
+                        } as any
+                    });
+
+                    // Update rule status
+                    await (prisma as any).alertRule.update({
+                        where: { id: rule.id },
+                        data: {
+                            lastTriggered: now,
+                            lastSeverity: severity
+                        }
+                    });
+
+                    results.push({ ruleId: rule.id, status: "triggered", severity });
+                } else {
+                    results.push({ ruleId: rule.id, status: "suppressed_by_cooldown" });
+                }
             } else {
+                // Reset last severity if rule is no longer triggered
+                if (rule.lastTriggered) {
+                    await (prisma as any).alertRule.update({
+                        where: { id: rule.id },
+                        data: { lastSeverity: null }
+                    });
+                }
                 results.push({ ruleId: rule.id, status: "ok" });
             }
         } catch (e) {
@@ -58,7 +83,7 @@ export async function evaluateAlertRules(tenantId: string) {
     return results;
 }
 
-async function checkRule(rule: any, tenantId: string): Promise<boolean> {
+async function checkRule(rule: any, tenantId: string): Promise<{ isTriggered: boolean, changePercent: number }> {
     const now = new Date();
     now.setUTCHours(0, 0, 0, 0);
 
@@ -138,18 +163,18 @@ async function checkRule(rule: any, tenantId: string): Promise<boolean> {
         compareVal = dailyAvg * rule.windowDays;
     }
 
-    if (compareVal === 0) return false;
+    if (compareVal === 0) return { isTriggered: false, changePercent: 0 };
 
     const changePercent = ((currentVal - compareVal) / compareVal) * 100;
 
     if (rule.condition === "drop" && changePercent < -rule.threshold) {
-        return true;
+        return { isTriggered: true, changePercent };
     }
     if (rule.condition === "spike" && changePercent > rule.threshold) {
-        return true;
+        return { isTriggered: true, changePercent };
     }
 
-    return false;
+    return { isTriggered: false, changePercent };
 }
 
 function getValueFromAggregate(agg: any, metric: string, isAvg = false): number {

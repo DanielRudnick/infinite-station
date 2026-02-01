@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,75 +11,69 @@ model Tenant {
   id           String        @id @default(cuid())
   name         String
   slug         String        @unique
-  plan         String        @default("free") // free, pro, enterprise
+  plan         String        @default("free")
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  users        User[]
-  integrations Integration[]
-  products     Product[]
   alerts       Alert[]
+  integrations Integration[]
   metrics      Metric[]
-  dailyMetrics ItemDailyMetrics[]
-  alertRules   AlertRule[]
+  products     Product[]
+  users        User[]
 }
 
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
-  role      String   @default("VIEWER") // SUPER_ADMIN, ADMIN, ANALYST, VIEWER
-  password  String?  // Hashed password for Credentials provider
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  role      String   @default("VIEWER")
+  password  String?
   tenantId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 model Integration {
-  id           String   @id @default(cuid())
-  type         String   // MERCADO_LIVRE, TINY, BLING, OLIST
-  status       String   @default("PENDING") // CONNECTED, DISCONNECTED, ERROR
-  accessToken  String   @map("access_token")
-  refreshToken String?  @map("refresh_token")
+  id           String    @id @default(cuid())
+  type         String
+  status       String    @default("PENDING")
+  accessToken  String    @map("access_token")
+  refreshToken String?   @map("refresh_token")
   expiresAt    DateTime? @map("expires_at")
   lastSync     DateTime? @map("last_sync")
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
   tenantId     String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@unique([tenantId, type])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  externalId  String   @map("external_id") // ID do marketplace (ex: MLB123)
-  sku         String?
-  title       String
-  category    String?
-  status      String
-  imageUrl    String?  @map("image_url")
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  tenantId    String
-  metrics     Metric[]
-  dailyMetrics ItemDailyMetrics[]
-  alerts      Alert[]
-  alertRules   AlertRule[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  externalId String   @map("external_id")
+  sku        String?
+  title      String
+  category   String?
+  status     String
+  imageUrl   String?  @map("image_url")
+  tenantId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  alerts     Alert[]
+  metrics    Metric[]
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
 
   @@unique([tenantId, externalId])
 }
 
 model Metric {
-  id          String   @id @default(cuid())
-  timestamp   DateTime @default(now())
-  type        String   // VISITS, SALES, QUESTIONS, IMPRESSIONS, CLICKS
-  value       Float
-  product     Product  @relation(fields: [productId], references: [id])
-  productId   String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  tenantId    String
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  type      String
+  value     Float
+  productId String
+  tenantId  String
+  product   Product  @relation(fields: [productId], references: [id])
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, timestamp])
   @@index([productId, timestamp])
@@ -92,54 +83,15 @@ model Alert {
   id          String   @id @default(cuid())
   title       String
   description String
-  severity    String   // DANGER, WARNING, INFO
-  status      String   @default("UNACK") // UNACK, ACK
+  severity    String
+  status      String   @default("UNACK")
   ruleType    String   @map("rule_type")
-  product     Product? @relation(fields: [productId], references: [id])
   productId   String?
-  tenant      Tenant   @relation(fields: [tenantId], references: [id])
   tenantId    String
-  rule        AlertRule? @relation(fields: [ruleId], references: [id])
-  ruleId      String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  product     Product? @relation(fields: [productId], references: [id])
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, status])
-}
-
-model AlertRule {
-  id              String   @id @default(cuid())
-  tenant          Tenant   @relation(fields: [tenantId], references: [id])
-  tenantId        String
-  product         Product? @relation(fields: [productId], references: [id])
-  productId       String?
-  metric          String   // visits, orders, revenue, price, stock
-  windowDays      Int
-  compareTo       String   // previous_period, baseline, avg_30d
-  condition       String   // drop, spike, flat
-  threshold       Float
-  enabled         Boolean  @default(true)
-  cooldownMinutes Int      @default(60)
-  lastTriggered   DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  alerts          Alert[]
-}
-
-model ItemDailyMetrics {
-  id        String   @id @default(cuid())
-  date      DateTime
-  visits    Int      @default(0)
-  orders    Int      @default(0)
-  revenue   Float    @default(0)
-  price     Float    @default(0)
-  stock     Int      @default(0)
-  
-  product   Product  @relation(fields: [productId], references: [id])
-  productId String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  tenantId  String
-
-  @@unique([productId, date])
-  @@index([tenantId, date])
 }

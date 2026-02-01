@@ -8,6 +8,7 @@ const prisma = new PrismaClient({
 async function main() {
     const email = process.env.ADMIN_EMAIL || "admin@infinitestation.com";
     const password = process.env.ADMIN_PASSWORD || "password123";
+    const tenantName = process.env.TENANT_NAME || "Minha Loja";
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 1. Ensure Default Tenant
@@ -15,7 +16,7 @@ async function main() {
     if (!tenant) {
         tenant = await prisma.tenant.create({
             data: {
-                name: "Mega Store",
+                name: tenantName,
                 slug: "loja-padrao",
                 plan: "pro",
             },

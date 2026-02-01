@@ -36,6 +36,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
                             email: user.email,
                             role: user.role,
                             tenantId: user.tenantId,
+                            tenantName: user.tenant?.name || "Minha Loja",
                             image: null, // Add if user has image
                         };
                     }

@@ -1,25 +1,25 @@
-import NextAuth, { DefaultSession } from "next-auth"
+import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
-  /**
-   * Returned by `useSession`, `auth`, contains data about the active session.
-   */
   interface Session {
     user: {
-      tenantId: string
-      role: string
-    } & DefaultSession["user"]
+      tenantId: string;
+      role: string;
+      tenantName: string;
+    } & DefaultSession["user"];
   }
 
   interface User {
-    tenantId: string
-    role: string
+    tenantId: string;
+    role: string;
+    tenantName: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    tenantId: string
-    role: string
+    tenantId: string;
+    role: string;
+    tenantName: string;
   }
 }

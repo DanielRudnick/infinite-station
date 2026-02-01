@@ -16,12 +16,12 @@ export async function GET(req: NextRequest) {
             return NextResponse.json([]);
         }
 
-        // Fetch top products by default (logic can be improved)
+        // Fetch top products with real metrics
         const products = await (prisma.product as any).findMany({
             where: { tenantId },
             take: 10,
             orderBy: {
-                updatedAt: 'desc'
+                lastSyncedAt: 'desc'
             },
             include: {
                 dailyMetrics: {
@@ -31,24 +31,48 @@ export async function GET(req: NextRequest) {
             }
         });
 
-        // Map to UI format
+        // Map to UI format with REAL calculated metrics
         const formatted = products.map((p: any) => {
             const last30Days = p.dailyMetrics || [];
-            const sales = last30Days.reduce((acc: number, m: any) => acc + m.orders, 0);
-            const revenue = last30Days.reduce((acc: number, m: any) => acc + m.revenue, 0);
-            const latestPrice = last30Days[0]?.price || 0;
-            const stock = last30Days[0]?.stock || 0;
+
+            // Calculate real metrics from dailyMetrics
+            const totalSales = last30Days.reduce((acc: number, m: any) => acc + m.orders, 0);
+            const totalRevenue = last30Days.reduce((acc: number, m: any) => acc + m.revenue, 0);
+            const totalVisits = last30Days.reduce((acc: number, m: any) => acc + m.visits, 0);
+
+            // Use latest metrics or fallback to Product fields
+            const latestMetrics = last30Days[0];
+            const currentPrice = p.price || latestMetrics?.price || 0;
+            const currentStock = p.availableQuantity ?? latestMetrics?.stock ?? 0;
+
+            // Calculate conversion rate
+            const conversionRate = totalVisits > 0 ? (totalSales / totalVisits) * 100 : 0;
+
+            // Calculate trend (compare first 15 days vs last 15 days)
+            const firstHalf = last30Days.slice(0, 15);
+            const secondHalf = last30Days.slice(15, 30);
+            const firstHalfSales = firstHalf.reduce((acc: number, m: any) => acc + m.orders, 0);
+            const secondHalfSales = secondHalf.reduce((acc: number, m: any) => acc + m.orders, 0);
+
+            let trend: "up" | "down" | "flat" = "flat";
+            if (secondHalfSales > 0) {
+                const change = ((firstHalfSales - secondHalfSales) / secondHalfSales) * 100;
+                if (change > 10) trend = "up";
+                else if (change < -10) trend = "down";
+            }
 
             return {
                 id: p.externalId,
                 name: p.title,
-                sales: sales,
-                revenue: revenue,
-                conversion: sales > 0 ? (sales / last30Days.reduce((acc: number, m: any) => acc + m.visits, 1)) * 100 : 0,
-                stock: stock,
-                trend: "flat", // Could calculate from previous period
+                sales: totalSales,
+                revenue: totalRevenue,
+                conversion: Math.round(conversionRate * 100) / 100,
+                stock: currentStock,
+                trend,
                 image: p.imageUrl || "",
-                price: latestPrice
+                price: currentPrice,
+                permalink: p.permalink || "",
+                lastSynced: p.lastSyncedAt
             };
         });
 

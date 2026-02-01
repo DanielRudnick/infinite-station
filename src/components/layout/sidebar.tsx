@@ -12,10 +12,11 @@ import {
     Bot,
     Plug,
     ChevronRight,
-    LogOut
+    LogOut,
+    User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/" },
@@ -28,6 +29,7 @@ const menuItems = [
 
 export function Sidebar() {
     const pathname = usePathname();
+    const { data: session } = useSession();
 
     return (
         <div className="flex flex-col h-screen w-64 glass border-r border-border/40 fixed left-0 top-0 z-50">
@@ -66,17 +68,22 @@ export function Sidebar() {
             </nav>
 
             <div className="p-4 mt-auto border-t border-border/40">
-                <div className="flex items-center gap-3 p-2 rounded-xl bg-muted/40 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent">
-                        <Settings className="w-4 h-4" />
+                <Link href="/settings">
+                    <div className="flex items-center gap-3 p-2 rounded-xl bg-muted/40 mb-4 hover:bg-muted/60 transition-colors cursor-pointer">
+                        <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent">
+                            <User className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <p className="text-sm font-semibold truncate">
+                                {session?.user?.tenantName || "Carregando..."}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                                {session?.user?.role || "USER"}
+                            </p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <div className="flex-1 overflow-hidden">
-                        <p className="text-sm font-semibold truncate">Mega Store</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Tenant Admin</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </div>
-
+                </Link>
 
                 <button
                     onClick={() => signOut({ callbackUrl: "/login" })}

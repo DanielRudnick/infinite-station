@@ -27,79 +27,94 @@ export async function syncMercadoLivreProducts(tenantId: string) {
         throw new Error("Failed to fetch user profile from Mercado Livre");
     }
 
-    // 3. Search for active items (scroll logic simplified for demo)
-    // For a full implementation we would loop through 'scroll_id'
-    const searchUrl = `${MELI_API_URL}/users/${userMe.id}/items/search?status=active&limit=50`;
-    const searchRes = await fetch(searchUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-    }).then((res) => res.json());
+    // 3. Fetch ALL items using scroll pagination
+    let allItemIds: string[] = [];
+    let scrollId: string | null = null;
+    let hasMore = true;
 
-    const itemIds: string[] = searchRes.results || [];
+    while (hasMore) {
+        const searchUrl = scrollId
+            ? `${MELI_API_URL}/users/${userMe.id}/items/search?scroll_id=${scrollId}`
+            : `${MELI_API_URL}/users/${userMe.id}/items/search?status=active&limit=100`;
 
-    if (itemIds.length === 0) {
+        const searchRes = await fetch(searchUrl, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }).then((res) => res.json());
+
+        const itemIds: string[] = searchRes.results || [];
+        allItemIds = allItemIds.concat(itemIds);
+
+        scrollId = searchRes.scroll_id || null;
+        hasMore = !!scrollId && itemIds.length > 0;
+
+        // Safety limit to prevent infinite loops
+        if (allItemIds.length > 10000) break;
+    }
+
+    if (allItemIds.length === 0) {
         return { count: 0, message: "No active items found." };
     }
 
-    // 4. Fetch Item Details
-    // GET /items?ids=MLB123,MLB456...
-    const itemsUrl = `${MELI_API_URL}/items?ids=${itemIds.join(",")}`;
-    const itemsRes = await fetch(itemsUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-    }).then((res) => res.json());
-
-    // 5. Upsert Products in Database
+    // 4. Fetch Item Details in batches (API limit is ~20 items per request)
+    const batchSize = 20;
     let syncedCount = 0;
 
-    for (const itemWrapper of itemsRes) {
-        if (itemWrapper.code === 200) {
-            const item = itemWrapper.body;
+    for (let i = 0; i < allItemIds.length; i += batchSize) {
+        const batch = allItemIds.slice(i, i + batchSize);
+        const itemsUrl = `${MELI_API_URL}/items?ids=${batch.join(",")}`;
 
-            await prisma.product.upsert({
-                where: {
-                    tenantId_externalId: {
-                        tenantId: tenantId,
-                        externalId: item.id,
+        const itemsRes = await fetch(itemsUrl, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }).then((res) => res.json());
+
+        // 5. Upsert Products in Database
+        for (const itemWrapper of itemsRes) {
+            const item = itemWrapper.body;
+            if (!item || !item.id) continue;
+
+            try {
+                await prisma.product.upsert({
+                    where: {
+                        tenantId_externalId: {
+                            tenantId,
+                            externalId: item.id,
+                        },
                     },
-                },
-                create: {
-                    tenantId: tenantId,
-                    externalId: item.id,
-                    title: item.title,
-                    sku: item.seller_custom_field || getAttribute(item.attributes, "SELLER_SKU") || null,
-                    status: item.status,
-                    category: item.category_id,
-                    imageUrl: item.thumbnail,
-                    metrics: {
-                        create: {
-                            tenantId: tenantId,
-                            type: "PRICE_SNAPSHOT",
-                            value: item.price,
-                            timestamp: new Date(),
-                        }
-                    }
-                },
-                update: {
-                    title: item.title,
-                    sku: item.seller_custom_field || getAttribute(item.attributes, "SELLER_SKU") || null,
-                    status: item.status,
-                    imageUrl: item.thumbnail,
-                    updatedAt: new Date(),
-                    // We also log a price snapshot metric on update
-                    metrics: {
-                        create: {
-                            tenantId: tenantId,
-                            type: "PRICE_SNAPSHOT",
-                            value: item.price,
-                            timestamp: new Date(),
-                        }
-                    }
-                },
-            });
-            syncedCount++;
+                    update: {
+                        title: item.title,
+                        sku: item.seller_custom_field || getAttribute(item.attributes, "SELLER_SKU") || null,
+                        status: item.status,
+                        category: item.category_id,
+                        categoryId: item.category_id,
+                        imageUrl: item.thumbnail,
+                        permalink: item.permalink,
+                        price: item.price,
+                        availableQuantity: item.available_quantity,
+                        lastSyncedAt: new Date(),
+                    },
+                    create: {
+                        tenantId,
+                        externalId: item.id,
+                        title: item.title,
+                        sku: item.seller_custom_field || getAttribute(item.attributes, "SELLER_SKU") || null,
+                        status: item.status,
+                        category: item.category_id,
+                        categoryId: item.category_id,
+                        imageUrl: item.thumbnail,
+                        permalink: item.permalink,
+                        price: item.price,
+                        availableQuantity: item.available_quantity,
+                        lastSyncedAt: new Date(),
+                    },
+                });
+                syncedCount++;
+            } catch (e) {
+                console.error(`Error syncing product ${item.id}:`, e);
+            }
         }
     }
 
-    return { count: syncedCount, message: "Sync completed successfully" };
+    return { count: syncedCount, message: `Synced ${syncedCount} products successfully.` };
 }
 
 export async function syncMercadoLivreMetrics(tenantId: string) {
