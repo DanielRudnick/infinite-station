@@ -3,21 +3,50 @@
 import { motion } from "framer-motion";
 import { Lock, Mail, ChevronRight, Store } from "lucide-react";
 import { useState } from "react";
+import { Toaster } from "sonner";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
     const [step, setStep] = useState<"login" | "tenant">("login");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setTimeout(() => {
+
+        // Ensure we are targeting the form inputs
+        const target = e.target as typeof e.target & {
+            email: { value: string };
+            password: { value: string };
+        };
+
+        const email = target.email.value;
+        const password = target.password.value;
+
+        try {
+            const result = await signIn("credentials", {
+                email,
+                password,
+                redirect: false,
+            });
+
+            if (result?.error) {
+                toast.error("Credenciais inválidas");
+                setLoading(false);
+            } else {
+                toast.success("Login realizado com sucesso!");
+                // Check if user has multiple tenants - for now default to home
+                // In a real multi-tenant app, we would check user.tenants length
+                router.push("/");
+            }
+        } catch (error) {
+            toast.error("Erro ao realizar login");
             setLoading(false);
-            setStep("tenant");
-        }, 1500);
+        }
     };
 
     const handleSelectTenant = (tenant: string) => {
@@ -60,6 +89,7 @@ export default function LoginPage() {
                             <div className="relative group">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-primary transition-colors" />
                                 <input
+                                    name="email"
                                     type="email"
                                     required
                                     placeholder="seu@email.com"
@@ -73,6 +103,7 @@ export default function LoginPage() {
                             <div className="relative group">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-primary transition-colors" />
                                 <input
+                                    name="password"
                                     type="password"
                                     required
                                     placeholder="••••••••"
@@ -133,6 +164,7 @@ export default function LoginPage() {
                     </motion.div>
                 )}
             </motion.div>
+            <Toaster position="top-right" richColors />
         </div>
     );
 }

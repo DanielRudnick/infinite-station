@@ -29,6 +29,7 @@ model User {
   email     String   @unique
   name      String?
   role      String   @default("VIEWER") // SUPER_ADMIN, ADMIN, ANALYST, VIEWER
+  password  String?  // Hashed password for Credentials provider
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   tenantId  String
   createdAt DateTime @default(now())

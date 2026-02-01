@@ -1,9 +1,19 @@
 "use client";
 
-import { Search, Bell, Calendar, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
+import { Search, Bell, Calendar, ChevronDown } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
 
 export function Topbar() {
+    const { data: session } = useSession();
+    const user = session?.user;
+
+    const getInitials = (name?: string | null) => {
+        if (!name) return "U";
+        return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+    };
+
     return (
         <header className="h-20 glass border-b border-border/40 fixed top-0 right-0 left-64 z-40 px-8 flex items-center justify-between">
             <div className="flex-1 max-w-md">
@@ -38,15 +48,19 @@ export function Topbar() {
                 {/* User Profile */}
                 <div className="flex items-center gap-3 pl-4 border-l border-border/40">
                     <div className="text-right hidden sm:block">
-                        <p className="text-sm font-semibold">Carlos Oliveira</p>
-                        <p className="text-[10px] text-muted-foreground">Admin</p>
+                        <p className="text-sm font-semibold">{user?.name || "Usuário"}</p>
+                        <p className="text-[10px] text-muted-foreground">{user?.email || "Convidado"}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary/60 border-2 border-background shadow-md overflow-hidden">
-                        <img
-                            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos"
-                            alt="Avatar"
-                            className="w-full h-full object-cover"
-                        />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary/60 border-2 border-background shadow-md overflow-hidden flex items-center justify-center text-white font-bold">
+                        {user?.image ? (
+                            <img
+                                src={user.image}
+                                alt="Avatar"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span>{getInitials(user?.name)}</span>
+                        )}
                     </div>
                 </div>
             </div>
